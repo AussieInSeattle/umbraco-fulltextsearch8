@@ -85,4 +85,8 @@
     <Compile Include="Services\SearchService.cs" />
     <Compile Include="Services\StatusService.cs" />
   </ItemGroup>
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="XCOPY /s /y &quot;D:\git\Repos\umbraco-fulltextsearch8\src\Our.Umbraco.FullTextSearch\bin\Debug\net472\Our*.*&quot; &quot;D:\git\Repos\CityOfSammamish\CityOfSammamish.Web\bin\&quot;" />
+  </Target>
 </Project>
