@@ -21,5 +21,7 @@ namespace Our.Umbraco.FullTextSearch.Interfaces
         bool HighlightSearchTerms { get; set; }
         string Culture { get; set; }
         string[] AllowedContentTypes { get; set; }
+        string AdditionalRawSearchText { get; set; }
+        string RawQueryUsed { get; set; }
     }
 }
