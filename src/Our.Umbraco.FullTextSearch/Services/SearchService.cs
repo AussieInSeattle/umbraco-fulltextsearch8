@@ -35,7 +35,7 @@ namespace Our.Umbraco.FullTextSearch.Services
         public IFullTextSearchResult Search(ISearch search, int currentPage = 1)
         {
             _search = search;
-            SetDefaults();
+            SetDefaults(); 
 
             _searchProperties = SetSearchProperties();
             _currentPage = currentPage;
@@ -76,45 +76,49 @@ namespace Our.Umbraco.FullTextSearch.Services
             {
                 var query = new StringBuilder();
 
-                query.Append("(");
+                query.Append($"-(templateID:0)");
 
-                switch (_search.SearchType)
+                if (!string.IsNullOrEmpty(_search.SearchTerm))
                 {
-                    case SearchType.MultiRelevance:
-                    case SearchType.MultiAnd:
+                    query.Append("(");
+                    switch (_search.SearchType)
+                    {
+                        case SearchType.MultiRelevance:
+                        case SearchType.MultiAnd:
 
-                        // We formulate the query differently depending on the input.
-                        if (_search.SearchTerm.Contains('"'))
-                        {
-                            // If the user has entered double quotes we don't bother
-                            // searching for the full string
-                            query.Append(QueryAllPropertiesOr(_search.SearchTermSplit, 1));
-                        }
-                        else if (!_search.SearchTerm.Contains('"') && !_search.SearchTerm.Contains(' '))
-                        {
-                            // if there's no spaces or quotes we don't need to get the quoted term and boost it
-                            query.Append(QueryAllPropertiesOr(_search.SearchTermSplit, 1));
-                        }
-                        else
-                        {
-                            // otherwise we search first for the entire query in quotes,
-                            // then for each term in the query OR'd together.
-                            query.Append($"({QueryAllPropertiesOr(_search.SearchTermQuoted, 2)} OR {QueryAllPropertiesOr(_search.SearchTermSplit, 1)})");
-                        }
+                            // We formulate the query differently depending on the input.
+                            if (_search.SearchTerm.Contains('"'))
+                            {
+                                // If the user has entered double quotes we don't bother
+                                // searching for the full string
+                                query.Append(QueryAllPropertiesOr(_search.SearchTermSplit, 1));
+                            }
+                            else if (!_search.SearchTerm.Contains('"') && !_search.SearchTerm.Contains(' '))
+                            {
+                                // if there's no spaces or quotes we don't need to get the quoted term and boost it
+                                query.Append(QueryAllPropertiesOr(_search.SearchTermSplit, 1));
+                            }
+                            else
+                            {
+                                // otherwise we search first for the entire query in quotes,
+                                // then for each term in the query OR'd together.
+                                query.Append($"({QueryAllPropertiesOr(_search.SearchTermQuoted, 2)} OR {QueryAllPropertiesOr(_search.SearchTermSplit, 1)})");
+                            }
 
-                        break;
+                            break;
 
-                    case SearchType.SimpleOr:
+                        case SearchType.SimpleOr:
 
-                        query.Append(QueryAllProperties(_search.SearchTermSplit, 1.0, "OR", true));
-                        break;
+                            query.Append(QueryAllProperties(_search.SearchTermSplit, 1.0, "OR", true));
+                            break;
 
-                    case SearchType.AsEntered:
+                        case SearchType.AsEntered:
 
-                        query.Append(QueryAllPropertiesAnd(_search.SearchTermSplit, 1.0));
-                        break;
+                            query.Append(QueryAllPropertiesAnd(_search.SearchTermSplit, 1.0));
+                            break;
+                    }
+                    query.Append(")");
                 }
-                query.Append(")");
 
                 if (_search.RootNodeIds.Any())
                 {
@@ -147,7 +151,9 @@ namespace Our.Umbraco.FullTextSearch.Services
                     query.Append($" AND -({disallowedPropertyAliasGroup})");
                 }
 
-                query.Append($" AND -(templateID:0)");
+                if (!string.IsNullOrEmpty(_search.AdditionalRawSearchText))
+                    query.Append(_search.AdditionalRawSearchText);
+                _search.RawQueryUsed = query.ToString();
 
                 var searcher = index.GetSearcher();
                 _logger.Debug<SearchService>("Trying to search for {query}", query.ToString());

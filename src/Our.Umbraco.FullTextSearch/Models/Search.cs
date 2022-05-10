@@ -21,6 +21,7 @@ namespace Our.Umbraco.FullTextSearch.Models
             Fuzzyness = 0.8;
             AddWildcard = false;
             AllowedContentTypes = new string[] { };
+            AdditionalRawSearchText = "";
         }
 
         public string Culture { get; set; }
@@ -37,6 +38,8 @@ namespace Our.Umbraco.FullTextSearch.Models
         public bool AddWildcard { get; set; }
         public bool HighlightSearchTerms { get; set; }
         public string[] AllowedContentTypes { get; set; }
+        public string AdditionalRawSearchText { get; set; }
+        public string RawQueryUsed { get; set; }
 
         public ICollection<string> SearchTermQuoted => new List<string> { '"' + QueryParser.Escape(SearchTerm) + '"' };
 
@@ -267,6 +270,12 @@ namespace Our.Umbraco.FullTextSearch.Models
         public Search RemoveAllowedContentType(string alias)
         {
             if (!AllowedContentTypes.Contains(alias)) AllowedContentTypes = AllowedContentTypes.Where(x => x != alias).ToArray();
+            return this;
+        }
+
+        public Search SetAdditionalRawSearchText(string additionalRawSearchText)
+        {
+            AdditionalRawSearchText = additionalRawSearchText;
             return this;
         }
     }
